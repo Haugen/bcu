@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/Haugen/git-branch-remover/tea"
 )
 
 func main() {
@@ -23,5 +25,12 @@ func main() {
 			branches = append(branches, text)
 		}
 	}
-	fmt.Println(branches)
+
+	test, err := tea.TeaMe(branches)
+
+	if err != nil {
+		fmt.Printf("error %s", err)
+	}
+
+	fmt.Println(test)
 }
