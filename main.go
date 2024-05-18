@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Haugen/git-branch-remover/tea"
+	"github.com/Haugen/bcu/tea"
 )
 
 func main() {
@@ -26,11 +26,11 @@ func main() {
 		}
 	}
 
-	test, err := tea.TeaMe(branches)
+	selectionResult, err := tea.SelectBranches(branches)
 
 	if err != nil {
 		fmt.Printf("error %s", err)
 	}
 
-	fmt.Println(test)
+	fmt.Printf("\n %s \n", selectionResult)
 }

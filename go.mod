@@ -1,4 +1,4 @@
-module github.com/Haugen/git-branch-remover
+module github.com/Haugen/bcu
 
 go 1.22.0
 
