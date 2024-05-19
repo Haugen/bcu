@@ -13,7 +13,7 @@ func main() {
 	cmdResult, err := exec.Command("git", "branch").Output()
 
 	if err != nil {
-		fmt.Printf("error %s", err)
+		fmt.Printf("oopsie! %s", err)
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(cmdResult)))
@@ -26,11 +26,12 @@ func main() {
 		}
 	}
 
-	selectionResult, err := tea.SelectBranches(branches)
+	gitCmd := tea.GetGitCmd(branches)
+	deleteResult, err := exec.Command("git", gitCmd...).Output()
 
 	if err != nil {
-		fmt.Printf("error %s", err)
+		fmt.Printf("oopsie! %s", err)
 	}
 
-	fmt.Printf("\n %s \n", selectionResult)
+	fmt.Println(string(deleteResult))
 }

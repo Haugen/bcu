@@ -18,10 +18,25 @@ func initialModel(branches []string) model {
 	}
 }
 
-func SelectBranches(branches []string) (tea.Model, error) {
+func GetGitCmd(branches []string) []string {
 	p := tea.NewProgram(initialModel(branches))
 	t, err := p.Run()
-	return t, err
+
+	if err != nil {
+		fmt.Printf("error %s", err)
+	}
+
+	var selectedBranches []string
+	for k := range t.(model).selected {
+		selectedBranches = append(selectedBranches, t.(model).branches[k])
+	}
+
+	gitCmd := []string{"branch", "-D"}
+	for _, branch := range selectedBranches {
+		gitCmd = append(gitCmd, branch)
+	}
+
+	return gitCmd
 }
 
 func (m model) Init() tea.Cmd {
