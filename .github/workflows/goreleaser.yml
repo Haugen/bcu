@@ -19,6 +19,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: '1.26.1'
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}

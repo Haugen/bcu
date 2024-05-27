@@ -2,7 +2,7 @@ run:
 	go run main.go
 
 build:
-	go build -o bin/main main.go
+	go build -o bin/bcu main.go
 
 release-snapshot:
 	goreleaser release --snapshot --clean

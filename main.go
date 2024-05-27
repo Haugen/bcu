@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -10,10 +11,15 @@ import (
 )
 
 func main() {
-	cmdResult, err := exec.Command("git", "branch").Output()
+	cmdResult, err := exec.Command("git", "branch").CombinedOutput()
+
+	if string(cmdResult)[0:5] == "fatal" {
+		fmt.Println(string(cmdResult))
+		os.Exit(1)
+	}
 
 	if err != nil {
-		fmt.Printf("oopsie! %s", err)
+		fmt.Printf("Something went wrong with running \"git branch\": %s", err)
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(cmdResult)))
@@ -26,12 +32,17 @@ func main() {
 		}
 	}
 
-	gitCmd := tea.GetGitCmd(branches)
-	deleteResult, err := exec.Command("git", gitCmd...).Output()
+	gitBranches := tea.GetBranches(branches)
 
-	if err != nil {
-		fmt.Printf("oopsie! %s", err)
+	if len(gitBranches) > 0 {
+		gitCmd := []string{"branch", "-D"}
+		gitCmd = append(gitCmd, gitBranches...)
+		deleteResult, err := exec.Command("git", gitCmd...).CombinedOutput()
+
+		if err != nil {
+			fmt.Printf("Something went wrong when trying to delete branches: %s", err)
+		}
+
+		fmt.Println(string(deleteResult))
 	}
-
-	fmt.Println(string(deleteResult))
 }
