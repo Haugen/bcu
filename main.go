@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Haugen/bcu/tea"
+	"github.com/Haugen/bcu/renderer"
 )
 
 func main() {
@@ -32,17 +32,9 @@ func main() {
 		}
 	}
 
-	gitBranches := tea.GetBranches(branches)
-
-	if len(gitBranches) > 0 {
-		gitCmd := []string{"branch", "-D"}
-		gitCmd = append(gitCmd, gitBranches...)
-		deleteResult, err := exec.Command("git", gitCmd...).CombinedOutput()
-
-		if err != nil {
-			fmt.Printf("Something went wrong when trying to delete branches: %s", err)
-		}
-
-		fmt.Println(string(deleteResult))
+	if len(branches) > 0 {
+		renderer := renderer.NewRenderer(branches)
+		selected := renderer.Run()
+		fmt.Println(selected)
 	}
 }
