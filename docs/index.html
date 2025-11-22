@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bcu - Branch Cleaner Upper</title>
+    <meta name="description" content="Interactive CLI tool for cleaning up local git branches">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>bcu</h1>
+            <p class="tagline">Branch Cleaner Upper</p>
+            <p class="subtitle">Because cleaning up local git branches shouldn't be a pain in the &#%</p>
+            <div class="github-badge">
+                <a href="https://github.com/Haugen/bcu" target="_blank" rel="noopener">
+                    <img src="https://img.shields.io/github/stars/Haugen/bcu?style=social" alt="GitHub stars">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <div class="terminal-demo">
+                <div class="terminal-header">
+                    <span class="terminal-button"></span>
+                    <span class="terminal-button"></span>
+                    <span class="terminal-button"></span>
+                </div>
+                <div class="terminal-body">
+                    <pre><code>$ bcu
+
+Select branches to delete (use ↑/↓ or j/k to navigate, Space to select, Enter to confirm, q to quit):
+
+  [ ] feature/old-ui
+> [x] bugfix/temp-fix
+  [x] experiment/vibe-new-algo
+  [ ] hotfix/security-patch</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="installation">
+            <h2>Installation</h2>
+            
+            <div class="install-options">
+                <div class="install-method">
+                    <h3>macOS (Homebrew)</h3>
+                    <div class="code-block">
+                        <code>brew install --cask haugen/tap/bcu</code>
+                        <button class="copy-btn" onclick="copyToClipboard('brew install --cask haugen/tap/bcu')">Copy</button>
+                    </div>
+                    <p class="note">Note: Unsigned binary. Run <code>xattr -d com.apple.quarantine /opt/homebrew/bin/bcu</code> after install.</p>
+                </div>
+
+                <div class="install-method">
+                    <h3>Binary Download</h3>
+                    <p>Download the latest release for your platform:</p>
+                    <a href="https://github.com/Haugen/bcu/releases/latest" class="download-link" target="_blank" rel="noopener">
+                        View Releases →
+                    </a>
+                </div>
+
+                <div class="install-method">
+                    <h3>From Source</h3>
+                    <div class="code-block">
+                        <code>go install github.com/Haugen/bcu@latest</code>
+                        <button class="copy-btn" onclick="copyToClipboard('go install github.com/Haugen/bcu@latest')">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="usage">
+            <h2>Usage</h2>
+            <p>Run <code>bcu</code> in any git repository:</p>
+            <div class="code-block">
+                <code>cd your-repo && bcu</code>
+            </div>
+            <div class="controls">
+                <ul>
+                    <li><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>j</kbd> <kbd>k</kbd> - Navigate</li>
+                    <li><kbd>Space</kbd> - Toggle selection</li>
+                    <li><kbd>Enter</kbd> - Delete selected branches</li>
+                    <li><kbd>q</kbd> or <kbd>Ctrl+C</kbd> - Quit</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Made by <a href="https://github.com/Haugen" target="_blank" rel="noopener">Haugen</a></p>
+            <p>Licensed under MIT</p>
+        </div>
+    </footer>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Optional: Add visual feedback
+                const buttons = document.querySelectorAll('.copy-btn');
+                buttons.forEach(btn => {
+                    if (btn.onclick.toString().includes(text)) {
+                        const originalText = btn.textContent;
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => btn.textContent = originalText, 2000);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
