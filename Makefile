@@ -7,8 +7,8 @@ build:
 test:
 	go test ./...
 
-release-snapshot:
+release-snapshot: test
 	goreleaser release --snapshot --clean
 
-release:
+release: test
 	goreleaser release --clean
