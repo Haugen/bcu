@@ -34,9 +34,10 @@ func readInput() (byte, error) {
 
 	// Map Up and Down arrow keys to the Javascript key codes since they don't fit in a single byte
 	if buf[0] == 27 && buf[1] == 91 {
-		if buf[2] == 65 {
+		switch buf[2] {
+		case 65:
 			char = 38
-		} else if buf[2] == 66 {
+		case 66:
 			char = 40
 		}
 	}
