@@ -21,7 +21,8 @@ const (
 
 // Renderer manages the interactive branch selection UI
 type Renderer struct {
-	state *State
+	state       *State
+	firstRender bool
 }
 
 // State holds the current state of the branch selector
@@ -116,7 +117,8 @@ func readInput() (byte, error) {
 
 func NewRenderer(branches []string) *Renderer {
 	return &Renderer{
-		state: NewState(branches),
+		state:       NewState(branches),
+		firstRender: true,
 	}
 }
 
@@ -157,8 +159,11 @@ func (r *Renderer) Run() []string {
 }
 
 func (r *Renderer) render() {
-	// Move cursor up to overwrite previous output
-	fmt.Printf("\033[%dA", len(r.state.list)+2)
+	// Move cursor up to overwrite previous output (skip on first render)
+	if !r.firstRender {
+		fmt.Printf("\033[%dA", len(r.state.list)+2)
+	}
+	r.firstRender = false
 
 	// Clear from cursor down
 	fmt.Print("\033[J")
