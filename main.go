@@ -10,7 +10,15 @@ import (
 	"github.com/Haugen/bcu/renderer"
 )
 
+var version = "dev"
+
 func main() {
+	// Handle --version flag
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("bcu version %s\n", version)
+		return
+	}
+
 	cmdResult, err := exec.Command("git", "branch").CombinedOutput()
 
 	if err != nil {
