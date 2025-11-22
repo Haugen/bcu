@@ -20,9 +20,10 @@ const (
 )
 
 type Renderer struct {
-	cursorPos int
-	list      []string
-	selected  map[int]bool
+	cursorPos   int
+	list        []string
+	selected    map[int]bool
+	firstRender bool
 }
 
 func readInput() (byte, error) {
@@ -45,9 +46,10 @@ func readInput() (byte, error) {
 
 func NewRenderer(branches []string) *Renderer {
 	return &Renderer{
-		cursorPos: 0,
-		list:      branches,
-		selected:  make(map[int]bool, len(branches)),
+		cursorPos:   0,
+		list:        branches,
+		selected:    make(map[int]bool, len(branches)),
+		firstRender: true,
 	}
 }
 
@@ -102,10 +104,11 @@ func (r *Renderer) getSelectedBranches() []string {
 }
 
 func (r *Renderer) render() {
-	// Move cursor up to overwrite previous output
-	if r.cursorPos > 0 || len(r.selected) > 0 {
+	// Move cursor up to overwrite previous output (skip on first render)
+	if !r.firstRender {
 		fmt.Printf("\033[%dA", len(r.list)+2)
 	}
+	r.firstRender = false
 
 	// Clear from cursor down
 	fmt.Print("\033[J")
