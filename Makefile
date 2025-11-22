@@ -4,6 +4,9 @@ run:
 build:
 	go build -o bin/bcu main.go
 
+test:
+	go test ./...
+
 release-snapshot:
 	goreleaser release --snapshot --clean
 
