@@ -12,6 +12,21 @@ import (
 
 var version = "dev"
 
+// parseBranches extracts branch names from git branch output,
+// filtering out the current branch marker (*) and protected branches (main, master)
+func parseBranches(gitOutput string) []string {
+	scanner := bufio.NewScanner(strings.NewReader(gitOutput))
+	scanner.Split(bufio.ScanWords)
+	var branches []string
+	for scanner.Scan() {
+		text := scanner.Text()
+		if text != "*" && text != "main" && text != "master" {
+			branches = append(branches, text)
+		}
+	}
+	return branches
+}
+
 func main() {
 	// Handle --version flag
 	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
@@ -32,15 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(output))
-	scanner.Split(bufio.ScanWords)
-	var branches []string
-	for scanner.Scan() {
-		text := scanner.Text()
-		if text != "*" && text != "main" && text != "master" {
-			branches = append(branches, text)
-		}
-	}
+	branches := parseBranches(output)
 
 	if len(branches) == 0 {
 		fmt.Println("No branches to clean up!")
