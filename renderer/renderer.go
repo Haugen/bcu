@@ -21,8 +21,9 @@ const (
 
 // Renderer manages the interactive branch selection UI
 type Renderer struct {
-	state       *State
-	firstRender bool
+	state         *State
+	firstRender   bool
+	lastLineCount int
 }
 
 // State holds the current state of the branch selector
@@ -32,7 +33,6 @@ type State struct {
 	selected  map[int]bool
 }
 
-// NewState creates a new state with the given branch list
 func NewState(branches []string) *State {
 	return &State{
 		cursorPos: 0,
@@ -41,7 +41,6 @@ func NewState(branches []string) *State {
 	}
 }
 
-// MoveCursorUp moves the cursor up by one position if possible
 func (s *State) MoveCursorUp() bool {
 	if s.cursorPos > 0 {
 		s.cursorPos--
@@ -50,7 +49,6 @@ func (s *State) MoveCursorUp() bool {
 	return false
 }
 
-// MoveCursorDown moves the cursor down by one position if possible
 func (s *State) MoveCursorDown() bool {
 	if s.cursorPos < len(s.list)-1 {
 		s.cursorPos++
@@ -59,7 +57,6 @@ func (s *State) MoveCursorDown() bool {
 	return false
 }
 
-// ToggleSelection toggles the selection state of the current item
 func (s *State) ToggleSelection() {
 	s.selected[s.cursorPos] = !s.selected[s.cursorPos]
 }
@@ -96,30 +93,33 @@ func (s *State) GetOutputLines() []string {
 	return lines
 }
 
-func readInput() (byte, error) {
-	var char byte
-	buf := make([]byte, 3)
-	_, err := os.Stdin.Read(buf)
-	char = buf[0]
+func NewRenderer(branches []string) *Renderer {
+	return &Renderer{
+		state:         NewState(branches),
+		firstRender:   true,
+		lastLineCount: 0,
+	}
+}
 
-	// Map Up and Down arrow keys to the Javascript key codes since they don't fit in a single byte
-	if buf[0] == 27 && buf[1] == 91 {
-		switch buf[2] {
-		case 65:
-			char = 38
-		case 66:
-			char = 40
+// countActualLines calculates how many terminal lines the output will occupy,
+// accounting for line wrapping based on terminal width
+func (r *Renderer) countActualLines(lines []string) int {
+	termWidth := getTerminalWidth()
+	totalLines := 0
+
+	for _, line := range lines {
+		lineLength := len(line)
+		if lineLength == 0 {
+			// Empty lines still take up one line
+			totalLines++
+		} else {
+			// Calculate how many terminal lines this content line will wrap to
+			wrappedLines := (lineLength + termWidth - 1) / termWidth
+			totalLines += wrappedLines
 		}
 	}
 
-	return char, err
-}
-
-func NewRenderer(branches []string) *Renderer {
-	return &Renderer{
-		state:       NewState(branches),
-		firstRender: true,
-	}
+	return totalLines
 }
 
 func (r *Renderer) Run() []string {
@@ -159,18 +159,48 @@ func (r *Renderer) Run() []string {
 }
 
 func (r *Renderer) render() {
+	lines := r.state.GetOutputLines()
+
 	// Move cursor up to overwrite previous output (skip on first render)
-	if !r.firstRender {
-		fmt.Printf("\033[%dA", len(r.state.list)+2)
+	if !r.firstRender && r.lastLineCount > 0 {
+		fmt.Printf("\033[%dA", r.lastLineCount)
 	}
 	r.firstRender = false
 
 	// Clear from cursor down
 	fmt.Print("\033[J")
 
-	// Get output lines and print them with proper line endings
-	lines := r.state.GetOutputLines()
 	for _, line := range lines {
 		fmt.Print(line + "\r\n")
 	}
+
+	// Track how many lines were actually printed for next render
+	r.lastLineCount = r.countActualLines(lines)
+}
+
+func readInput() (byte, error) {
+	var char byte
+	buf := make([]byte, 3)
+	_, err := os.Stdin.Read(buf)
+	char = buf[0]
+
+	// Map Up and Down arrow keys to the Javascript key codes since they don't fit in a single byte
+	if buf[0] == 27 && buf[1] == 91 {
+		switch buf[2] {
+		case 65:
+			char = 38
+		case 66:
+			char = 40
+		}
+	}
+
+	return char, err
+}
+
+func getTerminalWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width <= 0 {
+		return 80 // Default fallback
+	}
+	return width
 }
