@@ -6,7 +6,7 @@ Tired of manually cleaning up and deleting your local git branches? I know, me t
 
 Just run the program in any git repository and get those local branches cleaned up!
 
-```bash
+```console
 bcu
 ```
 
@@ -20,12 +20,12 @@ You can install using my private Homebrew Cask. Since I don't have an Apple Deve
 
 Install and trust:
 
-```bash
+```console
 brew install --cask haugen/tap/bcu && xattr -d com.apple.quarantine /opt/homebrew/bin/bcu
 ```
 
 Only install:
 
-```bash
+```console
 brew install --cask haugen/tap/bcu
 ```
