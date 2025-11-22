@@ -51,56 +51,78 @@ func NewRenderer(branches []string) *Renderer {
 	}
 }
 
-func (r *Renderer) Run() map[int]bool {
+func (r *Renderer) Run() []string {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		panic(err)
 	}
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
+	// Initial render
+	r.render()
+
 	for {
-		r.render()
 		input, err := readInput()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		switch input {
-		case upArrow:
-		case kKey:
+		case upArrow, kKey:
 			if r.cursorPos > 0 {
 				r.cursorPos--
+				r.render()
 			}
-		case downArrow:
-		case jKey:
+		case downArrow, jKey:
 			if r.cursorPos < len(r.list)-1 {
 				r.cursorPos++
+				r.render()
 			}
 		case spaceKey:
 			r.selected[r.cursorPos] = !r.selected[r.cursorPos]
-		}
-
-		if input == qKey || input == ctrlC {
-			break
+			r.render()
+		case enterKey:
+			// User confirmed selection
+			return r.getSelectedBranches()
+		case qKey, ctrlC:
+			// User quit without confirming
+			return []string{}
 		}
 	}
+}
 
-	return r.selected
+func (r *Renderer) getSelectedBranches() []string {
+	var branches []string
+	for i, branch := range r.list {
+		if r.selected[i] {
+			branches = append(branches, branch)
+		}
+	}
+	return branches
 }
 
 func (r *Renderer) render() {
-	fmt.Print("\033[H\033[2J")
+	// Move cursor up to overwrite previous output
+	if r.cursorPos > 0 || len(r.selected) > 0 {
+		fmt.Printf("\033[%dA", len(r.list)+2)
+	}
+
+	// Clear from cursor down
+	fmt.Print("\033[J")
+
+	fmt.Print("Select branches to delete (use ↑/↓ or j/k to navigate, Space to select, Enter to confirm, q to quit):\r\n\r\n")
+
 	for i, item := range r.list {
+		cursor := "  "
 		if r.cursorPos == i {
-			fmt.Print("> ")
-		} else {
-			fmt.Print("  ")
+			cursor = "> "
 		}
+
+		checkbox := "[ ] "
 		if r.selected[i] {
-			fmt.Print("[x] ")
-		} else {
-			fmt.Print("[ ] ")
+			checkbox = "[x] "
 		}
-		fmt.Println(item)
+
+		fmt.Print(cursor + checkbox + item + "\r\n")
 	}
 }

@@ -13,16 +13,18 @@ import (
 func main() {
 	cmdResult, err := exec.Command("git", "branch").CombinedOutput()
 
-	if string(cmdResult)[0:5] == "fatal" {
-		fmt.Println(string(cmdResult))
+	if err != nil {
+		fmt.Printf("Error running git command: %s\n", err)
 		os.Exit(1)
 	}
 
-	if err != nil {
-		fmt.Printf("Something went wrong with running \"git branch\": %s", err)
+	output := string(cmdResult)
+	if strings.HasPrefix(output, "fatal") {
+		fmt.Println(output)
+		os.Exit(1)
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(string(cmdResult)))
+	scanner := bufio.NewScanner(strings.NewReader(output))
 	scanner.Split(bufio.ScanWords)
 	var branches []string
 	for scanner.Scan() {
@@ -32,9 +34,22 @@ func main() {
 		}
 	}
 
-	if len(branches) > 0 {
-		renderer := renderer.NewRenderer(branches)
-		selected := renderer.Run()
-		fmt.Println(selected)
+	if len(branches) == 0 {
+		fmt.Println("No branches to clean up!")
+		return
 	}
+
+	renderer := renderer.NewRenderer(branches)
+	selectedBranches := renderer.Run()
+
+	if len(selectedBranches) == 0 {
+		fmt.Println("No branches selected. Exiting.")
+		return
+	}
+
+	args := append([]string{"branch", "-D"}, selectedBranches...)
+	deleteCmd := exec.Command("git", args...)
+	deleteCmd.Stdout = os.Stdout
+	deleteCmd.Stderr = os.Stderr
+	deleteCmd.Run()
 }
