@@ -68,9 +68,10 @@ func TestParseBranches(t *testing.T) {
 * main
 + worktree-feature
   feature-1
+  +branch-with-+-prefix
 + worktree-hotfix
   feature-2`,
-			expected: []string{"develop", "feature-1", "feature-2"},
+			expected: []string{"develop", "feature-1", "+branch-with-+-prefix", "feature-2"},
 		},
 	}
 

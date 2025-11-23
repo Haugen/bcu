@@ -25,7 +25,7 @@ func parseBranches(gitOutput string) []string {
 		}
 
 		// Skip worktree branches (lines starting with +)
-		if strings.HasPrefix(line, "+") {
+		if strings.HasPrefix(line, "+ ") {
 			continue
 		}
 
