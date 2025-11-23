@@ -13,16 +13,32 @@ import (
 var version = "dev"
 
 // parseBranches extracts branch names from git branch output,
-// filtering out the current branch marker (*) and protected branches (main, master)
+// filtering out the current branch marker (*), protected branches (main, master),
+// and worktrees (prefixed with +)
 func parseBranches(gitOutput string) []string {
 	scanner := bufio.NewScanner(strings.NewReader(gitOutput))
-	scanner.Split(bufio.ScanWords)
 	var branches []string
 	for scanner.Scan() {
-		text := scanner.Text()
-		if text != "*" && text != "main" && text != "master" {
-			branches = append(branches, text)
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
 		}
+
+		// Skip worktree branches (lines starting with +)
+		if strings.HasPrefix(line, "+") {
+			continue
+		}
+
+		// Remove current branch marker (*)
+		line = strings.TrimPrefix(line, "* ")
+		line = strings.TrimSpace(line)
+
+		// Skip protected branches
+		if line == "main" || line == "master" {
+			continue
+		}
+
+		branches = append(branches, line)
 	}
 	return branches
 }

@@ -52,6 +52,26 @@ func TestParseBranches(t *testing.T) {
   release-1.0.0`,
 			expected: []string{"feature/new-ui", "bugfix/JIRA-123", "release-1.0.0"},
 		},
+		{
+			name: "output with worktree branches",
+			input: `* main
+  test
+  test1
+  test2
++ worktree-test1
++ worktree-test2`,
+			expected: []string{"test", "test1", "test2"},
+		},
+		{
+			name: "mixed worktrees and regular branches",
+			input: `  develop
+* main
++ worktree-feature
+  feature-1
++ worktree-hotfix
+  feature-2`,
+			expected: []string{"develop", "feature-1", "feature-2"},
+		},
 	}
 
 	for _, tt := range tests {
