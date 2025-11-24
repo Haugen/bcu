@@ -19,6 +19,12 @@ const (
 	enterKey  = byte(13)
 )
 
+// Branch represents a git branch with metadata
+type Branch struct {
+	Name     string
+	IsActive bool // true if checked out in current or another worktree
+}
+
 // Renderer manages the interactive branch selection UI
 type Renderer struct {
 	state         *State
@@ -29,11 +35,11 @@ type Renderer struct {
 // State holds the current state of the branch selector
 type State struct {
 	cursorPos int
-	list      []string
+	list      []Branch
 	selected  map[int]bool
 }
 
-func NewState(branches []string) *State {
+func NewState(branches []Branch) *State {
 	return &State{
 		cursorPos: 0,
 		list:      branches,
@@ -58,6 +64,10 @@ func (s *State) MoveCursorDown() bool {
 }
 
 func (s *State) ToggleSelection() {
+	// Don't allow toggling selection on active branches (checked out in a worktree)
+	if s.list[s.cursorPos].IsActive {
+		return
+	}
 	s.selected[s.cursorPos] = !s.selected[s.cursorPos]
 }
 
@@ -66,7 +76,7 @@ func (s *State) GetSelectedBranches() []string {
 	var branches []string
 	for i, branch := range s.list {
 		if s.selected[i] {
-			branches = append(branches, branch)
+			branches = append(branches, branch.Name)
 		}
 	}
 	return branches
@@ -76,7 +86,7 @@ func (s *State) GetSelectedBranches() []string {
 func (s *State) GetOutputLines() []string {
 	lines := []string{"Select branches to delete (use ↑/↓ or j/k to navigate, Space to select, Enter to confirm, q to quit):", ""}
 
-	for i, item := range s.list {
+	for i, branch := range s.list {
 		cursor := "  "
 		if s.cursorPos == i {
 			cursor = "> "
@@ -86,14 +96,22 @@ func (s *State) GetOutputLines() []string {
 		if s.selected[i] {
 			checkbox = "[x] "
 		}
+		if branch.IsActive {
+			checkbox = "    "
+		}
 
-		lines = append(lines, cursor+checkbox+item)
+		line := cursor + checkbox + branch.Name
+		if branch.IsActive {
+			line += " (checked out)"
+		}
+
+		lines = append(lines, line)
 	}
 
 	return lines
 }
 
-func NewRenderer(branches []string) *Renderer {
+func NewRenderer(branches []Branch) *Renderer {
 	return &Renderer{
 		state:         NewState(branches),
 		firstRender:   true,
