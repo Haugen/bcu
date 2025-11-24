@@ -312,9 +312,9 @@ func TestGetOutputLinesWithActiveBranch(t *testing.T) {
 
 	lines := state.GetOutputLines()
 
-	// Active branch should have (checked out) indicator
-	if lines[3] != "  [ ] branch2 (checked out)" {
-		t.Errorf("Expected '  [ ] branch2 (checked out)', got '%s'", lines[3])
+	// Active branch should have (checked out) indicator and no checkbox
+	if lines[3] != "      branch2 (checked out)" {
+		t.Errorf("Expected '      branch2 (checked out)', got '%s'", lines[3])
 	}
 
 	// Regular branch should not have indicator
