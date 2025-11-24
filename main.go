@@ -92,5 +92,7 @@ func main() {
 	deleteCmd := exec.Command("git", args...)
 	deleteCmd.Stdout = os.Stdout
 	deleteCmd.Stderr = os.Stderr
-	deleteCmd.Run()
+	if err := deleteCmd.Run(); err != nil {
+		os.Exit(1)
+	}
 }

@@ -7,8 +7,13 @@ build:
 test:
 	go test ./...
 
-release-snapshot: test
+lint:
+	golangci-lint run
+
+check: test lint
+
+release-snapshot: check
 	goreleaser release --snapshot --clean
 
-release: test
+release: check
 	goreleaser release --clean

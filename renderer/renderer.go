@@ -149,7 +149,11 @@ func (r *Renderer) Run() []string {
 	if err != nil {
 		panic(err)
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
+	defer func() {
+		if err := term.Restore(int(os.Stdin.Fd()), oldState); err != nil {
+			log.Printf("failed to restore terminal: %v", err)
+		}
+	}()
 
 	// Initial render
 	r.render()
