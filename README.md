@@ -29,3 +29,11 @@ Only install:
 ```console
 brew install --cask haugen/tap/bcu
 ```
+
+### Go
+
+Install it using Golang
+
+```console
+go install github.com/Haugen/bcu@latest
+```
