@@ -13,32 +13,42 @@ import (
 var version = "dev"
 
 // parseBranches extracts branch names from git branch output,
-// filtering out the current branch marker (*), protected branches (main, master),
-// and worktrees (prefixed with +)
-func parseBranches(gitOutput string) []string {
+// filtering out protected branches (main, master), and marking branches
+// that are checked out in a worktree as active
+func parseBranches(gitOutput string) []renderer.Branch {
 	scanner := bufio.NewScanner(strings.NewReader(gitOutput))
-	var branches []string
+	var branches []renderer.Branch
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
 
-		// Skip worktree branches (lines starting with +)
-		if strings.HasPrefix(line, "+ ") {
-			continue
+		isActive := false
+
+		// Check if branch is checked out in current worktree (*)
+		if strings.HasPrefix(line, "* ") {
+			isActive = true
+			line = strings.TrimPrefix(line, "* ")
+			line = strings.TrimSpace(line)
 		}
 
-		// Remove current branch marker (*)
-		line = strings.TrimPrefix(line, "* ")
-		line = strings.TrimSpace(line)
+		// Check if branch is checked out in another worktree (+)
+		if strings.HasPrefix(line, "+ ") {
+			isActive = true
+			line = strings.TrimPrefix(line, "+ ")
+			line = strings.TrimSpace(line)
+		}
 
 		// Skip protected branches
 		if line == "main" || line == "master" {
 			continue
 		}
 
-		branches = append(branches, line)
+		branches = append(branches, renderer.Branch{
+			Name:     line,
+			IsActive: isActive,
+		})
 	}
 	return branches
 }

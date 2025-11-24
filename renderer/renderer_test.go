@@ -5,8 +5,21 @@ import (
 	"testing"
 )
 
+// Helper function to create test branches
+func testBranches(names ...string) []Branch {
+	branches := make([]Branch, len(names))
+	for i, name := range names {
+		branches[i] = Branch{Name: name, IsActive: false}
+	}
+	return branches
+}
+
 func TestNewState(t *testing.T) {
-	branches := []string{"feature-1", "feature-2", "bugfix-1"}
+	branches := []Branch{
+		{Name: "feature-1", IsActive: false},
+		{Name: "feature-2", IsActive: false},
+		{Name: "bugfix-1", IsActive: false},
+	}
 	state := NewState(branches)
 
 	if state.cursorPos != 0 {
@@ -23,7 +36,7 @@ func TestNewState(t *testing.T) {
 }
 
 func TestMoveCursorDown(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2", "branch3"})
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
 
 	// Move down from 0 to 1
 	moved := state.MoveCursorDown()
@@ -54,7 +67,7 @@ func TestMoveCursorDown(t *testing.T) {
 }
 
 func TestMoveCursorUp(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2", "branch3"})
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
 	state.cursorPos = 2 // Start at last position
 
 	// Move up from 2 to 1
@@ -87,7 +100,7 @@ func TestMoveCursorUp(t *testing.T) {
 
 func TestMoveCursorUpDownSequence(t *testing.T) {
 	// This test specifically addresses the duplication bug scenario
-	state := NewState([]string{"branch1", "branch2", "branch3"})
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
 
 	// Move down, then back up to position 0
 	state.MoveCursorDown() // 0 -> 1
@@ -110,7 +123,7 @@ func TestMoveCursorUpDownSequence(t *testing.T) {
 }
 
 func TestToggleSelection(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2", "branch3"})
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
 
 	// Initially nothing selected
 	if state.selected[0] {
@@ -131,7 +144,7 @@ func TestToggleSelection(t *testing.T) {
 }
 
 func TestToggleMultipleSelections(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2", "branch3"})
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
 
 	// Select branch 0
 	state.ToggleSelection()
@@ -162,7 +175,7 @@ func TestToggleMultipleSelections(t *testing.T) {
 }
 
 func TestGetSelectedBranches(t *testing.T) {
-	state := NewState([]string{"feature-1", "feature-2", "bugfix-1", "hotfix-1"})
+	state := NewState(testBranches("feature-1", "feature-2", "bugfix-1", "hotfix-1"))
 
 	// Select branches at indices 0, 2
 	state.selected[0] = true
@@ -177,7 +190,7 @@ func TestGetSelectedBranches(t *testing.T) {
 }
 
 func TestGetSelectedBranchesEmpty(t *testing.T) {
-	state := NewState([]string{"feature-1", "feature-2"})
+	state := NewState(testBranches("feature-1", "feature-2"))
 
 	result := state.GetSelectedBranches()
 
@@ -187,7 +200,7 @@ func TestGetSelectedBranchesEmpty(t *testing.T) {
 }
 
 func TestGetOutputLines(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2"})
+	state := NewState(testBranches("branch1", "branch2"))
 
 	lines := state.GetOutputLines()
 
@@ -218,7 +231,7 @@ func TestGetOutputLines(t *testing.T) {
 }
 
 func TestGetOutputLinesWithSelection(t *testing.T) {
-	state := NewState([]string{"branch1", "branch2"})
+	state := NewState(testBranches("branch1", "branch2"))
 	state.cursorPos = 1
 	state.selected[1] = true
 
@@ -238,11 +251,10 @@ func TestGetOutputLinesWithSelection(t *testing.T) {
 func TestGetOutputLinesCount(t *testing.T) {
 	// This test verifies that the line count is always consistent
 	// which would catch the duplication bug
-	branches := []string{"b1", "b2", "b3"}
-	state := NewState(branches)
+	state := NewState(testBranches("b1", "b2", "b3"))
 
 	// Get initial line count
-	expectedCount := len(branches) + 2 // branches + header + empty line
+	expectedCount := 3 + 2 // branches + header + empty line
 
 	if len(state.GetOutputLines()) != expectedCount {
 		t.Errorf("Expected %d lines initially, got %d", expectedCount, len(state.GetOutputLines()))
@@ -262,5 +274,51 @@ func TestGetOutputLinesCount(t *testing.T) {
 	state.ToggleSelection()
 	if len(state.GetOutputLines()) != expectedCount {
 		t.Error("Line count changed after toggling selection")
+	}
+}
+
+func TestToggleSelectionOnActiveBranch(t *testing.T) {
+	// Test that active branches cannot be selected
+	branches := []Branch{
+		{Name: "branch1", IsActive: false},
+		{Name: "branch2", IsActive: true}, // Active branch
+		{Name: "branch3", IsActive: false},
+	}
+	state := NewState(branches)
+
+	// Try to select an active branch (position 1)
+	state.cursorPos = 1
+	state.ToggleSelection()
+
+	// Should not be selected
+	if state.selected[1] {
+		t.Error("Expected active branch to not be selectable")
+	}
+
+	// Regular branch should be selectable
+	state.cursorPos = 0
+	state.ToggleSelection()
+	if !state.selected[0] {
+		t.Error("Expected non-active branch to be selectable")
+	}
+}
+
+func TestGetOutputLinesWithActiveBranch(t *testing.T) {
+	branches := []Branch{
+		{Name: "branch1", IsActive: false},
+		{Name: "branch2", IsActive: true},
+	}
+	state := NewState(branches)
+
+	lines := state.GetOutputLines()
+
+	// Active branch should have (checked out) indicator
+	if lines[3] != "  [ ] branch2 (checked out)" {
+		t.Errorf("Expected '  [ ] branch2 (checked out)', got '%s'", lines[3])
+	}
+
+	// Regular branch should not have indicator
+	if lines[2] != "> [ ] branch1" {
+		t.Errorf("Expected '> [ ] branch1', got '%s'", lines[2])
 	}
 }
