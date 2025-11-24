@@ -123,11 +123,9 @@ func (r *Renderer) countActualLines(lines []string) int {
 }
 
 func (r *Renderer) Run() []string {
-
 	// Switch to alternate screen buffer
 	fmt.Print("\033[?1049h")
 	defer fmt.Print("\033[?1049l") // Switch back on exit
-
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
