@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	ctrlA     = byte(1)
 	qKey      = byte(113)
 	ctrlC     = byte(3)
 	upArrow   = byte(38)
@@ -71,6 +72,26 @@ func (s *State) ToggleSelection() {
 	s.selected[s.cursorPos] = !s.selected[s.cursorPos]
 }
 
+// ToggleAllSelections toggles selection for all non-active branches
+// If all eligible branches are selected, deselect all; otherwise select all
+func (s *State) ToggleAllSelections() {
+	// Check if all eligible branches are currently selected
+	allSelected := true
+	for i, branch := range s.list {
+		if !branch.IsActive && !s.selected[i] {
+			allSelected = false
+			break
+		}
+	}
+
+	// If all are selected, deselect all; otherwise select all
+	for i, branch := range s.list {
+		if !branch.IsActive {
+			s.selected[i] = !allSelected
+		}
+	}
+}
+
 // GetSelectedBranches returns a slice of selected branch names
 func (s *State) GetSelectedBranches() []string {
 	var branches []string
@@ -84,7 +105,7 @@ func (s *State) GetSelectedBranches() []string {
 
 // GetOutputLines returns the lines to be rendered (without ANSI codes)
 func (s *State) GetOutputLines() []string {
-	lines := []string{"Select branches to delete (use ↑/↓ or j/k to navigate, Space to select, Enter to confirm, q to quit):", ""}
+	lines := []string{"Select branches to delete (use ↑/↓ or j/k to navigate, Space to select, ctrl+a to toggle all, Enter to confirm, q to quit):", ""}
 
 	for i, branch := range s.list {
 		cursor := "  "
@@ -175,6 +196,9 @@ func (r *Renderer) Run() []string {
 			}
 		case spaceKey:
 			r.state.ToggleSelection()
+			r.render()
+		case ctrlA:
+			r.state.ToggleAllSelections()
 			r.render()
 		case enterKey:
 			return r.state.GetSelectedBranches()
