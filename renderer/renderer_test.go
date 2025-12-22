@@ -322,3 +322,69 @@ func TestGetOutputLinesWithActiveBranch(t *testing.T) {
 		t.Errorf("Expected '> [ ] branch1', got '%s'", lines[2])
 	}
 }
+
+func TestToggleAllSelections_SelectAll(t *testing.T) {
+	// Start with nothing selected, toggle all should select all
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
+
+	state.ToggleAllSelections()
+
+	// All branches should now be selected
+	if !state.selected[0] || !state.selected[1] || !state.selected[2] {
+		t.Error("Expected all branches to be selected after toggle all")
+	}
+}
+
+func TestToggleAllSelections_DeselectAll(t *testing.T) {
+	// Start with all selected, toggle all should deselect all
+	state := NewState(testBranches("branch1", "branch2", "branch3"))
+	state.selected[0] = true
+	state.selected[1] = true
+	state.selected[2] = true
+
+	state.ToggleAllSelections()
+
+	// All branches should now be deselected
+	if state.selected[0] || state.selected[1] || state.selected[2] {
+		t.Error("Expected all branches to be deselected after toggle all")
+	}
+}
+
+func TestToggleAllSelections_SkipsActiveBranches(t *testing.T) {
+	// Mix of active and non-active branches
+	branches := []Branch{
+		{Name: "branch1", IsActive: false},
+		{Name: "branch2", IsActive: true}, // Active
+		{Name: "branch3", IsActive: false},
+		{Name: "branch4", IsActive: true}, // Active
+		{Name: "branch5", IsActive: false},
+	}
+	state := NewState(branches)
+
+	state.ToggleAllSelections()
+
+	// Non-active branches should be selected
+	if !state.selected[0] || !state.selected[2] || !state.selected[4] {
+		t.Error("Expected non-active branches to be selected")
+	}
+
+	// Active branches should NOT be selected
+	if state.selected[1] || state.selected[3] {
+		t.Error("Expected active branches to NOT be selected")
+	}
+}
+
+func TestToggleAllSelections_PartialToFull(t *testing.T) {
+	// Start with partial selection, toggle all should select remaining
+	state := NewState(testBranches("branch1", "branch2", "branch3", "branch4"))
+	state.selected[0] = true
+	state.selected[2] = true
+	// branch1 and branch3 selected, branch2 and branch4 not selected
+
+	state.ToggleAllSelections()
+
+	// All should now be selected (not deselected)
+	if !state.selected[0] || !state.selected[1] || !state.selected[2] || !state.selected[3] {
+		t.Error("Expected all branches to be selected after toggle all from partial state")
+	}
+}
